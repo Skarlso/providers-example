@@ -1,19 +1,18 @@
 package models
 
-type Type int
+type Type string
 
 var (
 	// Bare metal plugin type.
-	Bare Type = 0
+	Bare Type = "bare"
 	// Container plugin type.
-	Container Type = 1
+	Container Type = "container"
 )
 
 // Plugin defines what a Plugin looks like.
 type Plugin struct {
 	ID   int
 	Name string
-	Path string
 	Type Type
 }
 
