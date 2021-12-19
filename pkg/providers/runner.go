@@ -1,6 +1,8 @@
 package providers
 
+import "context"
+
 // Runner runs a plugin.
 type Runner interface {
-	Run(args []string) error
+	Run(ctx context.Context, name string, args []string) error
 }

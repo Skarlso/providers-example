@@ -11,9 +11,10 @@ var (
 
 // Plugin defines what a Plugin looks like.
 type Plugin struct {
-	ID   int
-	Name string
-	Type Type
+	ID       int
+	Name     string
+	Type     Type
+	Location string
 }
 
 // ContainerPlugin is a specific plugin which is in a container.
