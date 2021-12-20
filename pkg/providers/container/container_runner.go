@@ -37,15 +37,23 @@ type Runner struct {
 
 	Logger zerolog.Logger
 	Next   providers.Runner
+
+	cli client.APIClient
 }
 
 // NewRunner creates a new container based runtime.
-func NewRunner(logger zerolog.Logger, cfg Config, deps Dependencies) *Runner {
+func NewRunner(logger zerolog.Logger, cfg Config, deps Dependencies) (*Runner, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		logger.Debug().Err(err).Msg("Failed to create docker client.")
+		return nil, err
+	}
 	return &Runner{
 		Logger:       logger,
 		Config:       cfg,
 		Dependencies: deps,
-	}
+		cli:          cli,
+	}, nil
 }
 
 // Run implements the container based runtime details, using Docker as an engine.
@@ -62,17 +70,15 @@ func (cr *Runner) Run(ctx context.Context, name string, args []string) error {
 		}
 		return cr.Next.Run(ctx, name, args)
 	}
-	// call rest of the gang here.
+	if err := cr.runCommand(cmd.Name, cmd.Container.Image, args); err != nil {
+		return fmt.Errorf("failed to run command: %w", err)
+	}
 	return nil
 }
 
-func (cr *Runner) pullAndCreateContainer(commandName, image string, args []string) error {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		cr.Logger.Debug().Err(err).Msg("Failed to create docker client.")
-		return err
-	}
-	output, err := cli.ImagePull(context.Background(), image, types.ImagePullOptions{})
+// runCommand takes a command name and an image and the necessary arguments and runs the container and waits for output.
+func (cr *Runner) runCommand(commandName, image string, args []string) error {
+	output, err := cr.cli.ImagePull(context.Background(), image, types.ImagePullOptions{})
 	if err != nil {
 		cr.Logger.Debug().Err(err).Msg("Failed to pull image.")
 		return err
@@ -83,7 +89,7 @@ func (cr *Runner) pullAndCreateContainer(commandName, image string, args []strin
 	}
 
 	cr.Logger.Info().Msg("Creating container...")
-	cont, err := cli.ContainerCreate(context.Background(), &container.Config{
+	cont, err := cr.cli.ContainerCreate(context.Background(), &container.Config{
 		AttachStdout: true,
 		AttachStderr: true,
 		Image:        image,
@@ -102,16 +108,11 @@ func (cr *Runner) pullAndCreateContainer(commandName, image string, args []strin
 func (cr *Runner) startAndWaitForContainer(commandName, containerID string) {
 	cr.Logger.Info().Str("name", commandName).Msg("Starting running command...")
 	done := make(chan error, 1)
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		cr.Logger.Debug().Err(err).Msg("Failed to create docker client.")
-		return
-	}
 	defer func() {
 		// we remove the container in a `defer` instead of autoRemove, to be able to read out the logs.
 		// If we use AutoRemove, the container is gone by the tcr we want to read the output.
 		// Could try streaming the logs. But this is enough for now.
-		if err := cli.ContainerRemove(context.Background(), containerID, types.ContainerRemoveOptions{
+		if err := cr.cli.ContainerRemove(context.Background(), containerID, types.ContainerRemoveOptions{
 			Force: true,
 		}); err != nil {
 			cr.Logger.Debug().Err(err).Str("container_id", containerID).Msg("Failed to remove container.")
@@ -119,12 +120,12 @@ func (cr *Runner) startAndWaitForContainer(commandName, containerID string) {
 	}()
 
 	cr.Logger.Info().Msg("Starting container...")
-	if err := cli.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{}); err != nil {
+	if err := cr.cli.ContainerStart(context.Background(), containerID, types.ContainerStartOptions{}); err != nil {
 		return
 	}
 
 	go func() {
-		exit, err := cli.ContainerWait(context.Background(), containerID, container.WaitConditionNotRunning)
+		exit, err := cr.cli.ContainerWait(context.Background(), containerID, container.WaitConditionNotRunning)
 		select {
 		case e := <-err:
 			done <- e
@@ -144,7 +145,7 @@ func (cr *Runner) startAndWaitForContainer(commandName, containerID string) {
 	for {
 		select {
 		case err := <-done:
-			log, logErr := cli.ContainerLogs(context.Background(), containerID, types.ContainerLogsOptions{
+			log, logErr := cr.cli.ContainerLogs(context.Background(), containerID, types.ContainerLogsOptions{
 				ShowStderr: true,
 				ShowStdout: true,
 			})
@@ -169,7 +170,7 @@ func (cr *Runner) startAndWaitForContainer(commandName, containerID string) {
 		case <-time.After(time.Duration(cr.DefaultMaximumCommandRuntime) * time.Second):
 			// update entry
 			cr.Logger.Error().Msg("Command tcrd out.")
-			if err := cli.ContainerKill(context.Background(), containerID, "SIGKILL"); err != nil {
+			if err := cr.cli.ContainerKill(context.Background(), containerID, "SIGKILL"); err != nil {
 				cr.Logger.Error().Str("container_id", containerID).Msg("Failed to kill process with pid.")
 			}
 			return
