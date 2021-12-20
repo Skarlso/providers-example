@@ -43,8 +43,17 @@ func (l *LiteStorer) Create(ctx context.Context, plugin *models.Plugin) error {
 			l.Logger.Error().Err(err).Msg("failed to close db connection")
 		}
 	}()
+	var (
+		image, location string
+	)
+	if plugin.Container != nil {
+		image = plugin.Container.Image
+	}
+	if plugin.Bare != nil {
+		location = plugin.Bare.Location
+	}
 	// we could use a transaction here and all the jazz, but this is a blog post project. :)
-	if _, err = db.Exec("insert into plugins(name, type, location) values($1, $2, $3);", plugin.Name, plugin.Type, plugin.Location); err != nil {
+	if _, err = db.Exec("insert into plugins(name, type, location, image) values($1, $2, $3, $4);", plugin.Name, plugin.Type, location, image); err != nil {
 		return fmt.Errorf("failed to run insert into: %w", err)
 	}
 	l.Logger.Info().Str("name", plugin.Name).Msg("done")
@@ -70,19 +79,35 @@ func (l *LiteStorer) Get(ctx context.Context, name string) (*models.Plugin, erro
 		storedName     string
 		storedType     string
 		storedLocation string
+		storedImage    string
 	)
-	if err := db.QueryRow("select id, name, type, location from plugins where name = $1;", name).Scan(&storedID, &storedName, &storedType, &storedLocation); err != nil {
+	if err := db.QueryRow("select id, name, type, location, image from plugins where name = $1;", name).Scan(
+		&storedID,
+		&storedName,
+		&storedType,
+		&storedLocation,
+		&storedImage,
+	); err != nil {
 		return nil, fmt.Errorf("failed to run get: %w", err)
 	}
 	result := &models.Plugin{
-		ID:       storedID,
-		Name:     storedName,
-		Type:     models.Type(storedType),
-		Location: storedLocation,
+		ID:   storedID,
+		Name: storedName,
+		Type: storedType,
+	}
+	if storedImage != "" {
+		result.Container = &models.ContainerPlugin{
+			Image: storedImage,
+		}
+	} else if storedLocation != "" {
+		result.Bare = &models.BareMetalPlugin{
+			Location: storedLocation,
+		}
 	}
 	return result, nil
 }
 
+// Delete removes a plugin from storage.
 func (l *LiteStorer) Delete(ctx context.Context, name string) error {
 	l.Logger.Info().Str("name", name).Msg("Deleting plugin...")
 	db, err := l.createConnection()
@@ -102,6 +127,7 @@ func (l *LiteStorer) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
+// List all available plugins.
 func (l *LiteStorer) List(ctx context.Context) ([]*models.Plugin, error) {
 	db, err := l.createConnection()
 	if err != nil {
@@ -113,7 +139,7 @@ func (l *LiteStorer) List(ctx context.Context) ([]*models.Plugin, error) {
 		}
 	}()
 	// we could use a transaction here and all the jazz, but this is a blog post project. :)
-	row, err := db.Query("select id, name, type, location from plugins")
+	row, err := db.Query("select id, name, type, location, image from plugins")
 	if err != nil {
 		return nil, fmt.Errorf("failed to run query: %w", err)
 	}
@@ -124,16 +150,26 @@ func (l *LiteStorer) List(ctx context.Context) ([]*models.Plugin, error) {
 			storedName     string
 			storedType     string
 			storedLocation string
+			storedImage    string
 		)
-		if err := row.Scan(&storedID, &storedName, &storedType, &storedLocation); err != nil {
+		if err := row.Scan(&storedID, &storedName, &storedType, &storedLocation, &storedImage); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
-		result = append(result, &models.Plugin{
-			ID:       storedID,
-			Name:     storedName,
-			Type:     models.Type(storedType),
-			Location: storedLocation,
-		})
+		plugin := &models.Plugin{
+			ID:   storedID,
+			Name: storedName,
+			Type: storedType,
+		}
+		if storedImage != "" {
+			plugin.Container = &models.ContainerPlugin{
+				Image: storedImage,
+			}
+		} else if storedLocation != "" {
+			plugin.Bare = &models.BareMetalPlugin{
+				Location: storedLocation,
+			}
+		}
+		result = append(result, plugin)
 	}
 	return result, nil
 }
@@ -147,6 +183,7 @@ func (l *LiteStorer) createConnection() (*sql.DB, error) {
 	return db, nil
 }
 
+// Init creates and bootstraps the database.
 func (l *LiteStorer) Init() error {
 	l.Logger.Debug().Str("location", l.DBLocation).Msg("Creating new database...®")
 	if _, err := os.Stat(filepath.Join(l.DBLocation, "provider.db")); err == nil {
@@ -160,7 +197,7 @@ func (l *LiteStorer) Init() error {
 	}
 	defer db.Close()
 
-	sqlStmt := `create table plugins (id integer primary key, name text, type text, location text);`
+	sqlStmt := `create table plugins (id integer primary key, name text, type text, location text, image text);`
 	if _, err := db.Exec(sqlStmt); err != nil {
 		return fmt.Errorf("failed to execute bootstrap statement: %w", err)
 	}
