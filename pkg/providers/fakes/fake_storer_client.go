@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Skarlso/providers-example/pkg/models"
@@ -9,10 +10,11 @@ import (
 )
 
 type FakeStorer struct {
-	CreateStub        func(*models.Plugin) error
+	CreateStub        func(context.Context, *models.Plugin) error
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
-		arg1 *models.Plugin
+		arg1 context.Context
+		arg2 *models.Plugin
 	}
 	createReturns struct {
 		result1 error
@@ -20,10 +22,11 @@ type FakeStorer struct {
 	createReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteStub        func(string) error
+	DeleteStub        func(context.Context, string) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 string
+		arg1 context.Context
+		arg2 string
 	}
 	deleteReturns struct {
 		result1 error
@@ -31,10 +34,11 @@ type FakeStorer struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetStub        func(string) (*models.Plugin, error)
+	GetStub        func(context.Context, string) (*models.Plugin, error)
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
-		arg1 string
+		arg1 context.Context
+		arg2 string
 	}
 	getReturns struct {
 		result1 *models.Plugin
@@ -54,9 +58,10 @@ type FakeStorer struct {
 	initReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ListStub        func() ([]*models.Plugin, error)
+	ListStub        func(context.Context) ([]*models.Plugin, error)
 	listMutex       sync.RWMutex
 	listArgsForCall []struct {
+		arg1 context.Context
 	}
 	listReturns struct {
 		result1 []*models.Plugin
@@ -70,18 +75,19 @@ type FakeStorer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeStorer) Create(arg1 *models.Plugin) error {
+func (fake *FakeStorer) Create(arg1 context.Context, arg2 *models.Plugin) error {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		arg1 *models.Plugin
-	}{arg1})
+		arg1 context.Context
+		arg2 *models.Plugin
+	}{arg1, arg2})
 	stub := fake.CreateStub
 	fakeReturns := fake.createReturns
-	fake.recordInvocation("Create", []interface{}{arg1})
+	fake.recordInvocation("Create", []interface{}{arg1, arg2})
 	fake.createMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -95,17 +101,17 @@ func (fake *FakeStorer) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *FakeStorer) CreateCalls(stub func(*models.Plugin) error) {
+func (fake *FakeStorer) CreateCalls(stub func(context.Context, *models.Plugin) error) {
 	fake.createMutex.Lock()
 	defer fake.createMutex.Unlock()
 	fake.CreateStub = stub
 }
 
-func (fake *FakeStorer) CreateArgsForCall(i int) *models.Plugin {
+func (fake *FakeStorer) CreateArgsForCall(i int) (context.Context, *models.Plugin) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
 	argsForCall := fake.createArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeStorer) CreateReturns(result1 error) {
@@ -131,18 +137,19 @@ func (fake *FakeStorer) CreateReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorer) Delete(arg1 string) error {
+func (fake *FakeStorer) Delete(arg1 context.Context, arg2 string) error {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 string
-	}{arg1})
+		arg1 context.Context
+		arg2 string
+	}{arg1, arg2})
 	stub := fake.DeleteStub
 	fakeReturns := fake.deleteReturns
-	fake.recordInvocation("Delete", []interface{}{arg1})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
 	fake.deleteMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -156,17 +163,17 @@ func (fake *FakeStorer) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeStorer) DeleteCalls(stub func(string) error) {
+func (fake *FakeStorer) DeleteCalls(stub func(context.Context, string) error) {
 	fake.deleteMutex.Lock()
 	defer fake.deleteMutex.Unlock()
 	fake.DeleteStub = stub
 }
 
-func (fake *FakeStorer) DeleteArgsForCall(i int) string {
+func (fake *FakeStorer) DeleteArgsForCall(i int) (context.Context, string) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	argsForCall := fake.deleteArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeStorer) DeleteReturns(result1 error) {
@@ -192,18 +199,19 @@ func (fake *FakeStorer) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorer) Get(arg1 string) (*models.Plugin, error) {
+func (fake *FakeStorer) Get(arg1 context.Context, arg2 string) (*models.Plugin, error) {
 	fake.getMutex.Lock()
 	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
-		arg1 string
-	}{arg1})
+		arg1 context.Context
+		arg2 string
+	}{arg1, arg2})
 	stub := fake.GetStub
 	fakeReturns := fake.getReturns
-	fake.recordInvocation("Get", []interface{}{arg1})
+	fake.recordInvocation("Get", []interface{}{arg1, arg2})
 	fake.getMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -217,17 +225,17 @@ func (fake *FakeStorer) GetCallCount() int {
 	return len(fake.getArgsForCall)
 }
 
-func (fake *FakeStorer) GetCalls(stub func(string) (*models.Plugin, error)) {
+func (fake *FakeStorer) GetCalls(stub func(context.Context, string) (*models.Plugin, error)) {
 	fake.getMutex.Lock()
 	defer fake.getMutex.Unlock()
 	fake.GetStub = stub
 }
 
-func (fake *FakeStorer) GetArgsForCall(i int) string {
+func (fake *FakeStorer) GetArgsForCall(i int) (context.Context, string) {
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
 	argsForCall := fake.getArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeStorer) GetReturns(result1 *models.Plugin, result2 error) {
@@ -309,17 +317,18 @@ func (fake *FakeStorer) InitReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorer) List() ([]*models.Plugin, error) {
+func (fake *FakeStorer) List(arg1 context.Context) ([]*models.Plugin, error) {
 	fake.listMutex.Lock()
 	ret, specificReturn := fake.listReturnsOnCall[len(fake.listArgsForCall)]
 	fake.listArgsForCall = append(fake.listArgsForCall, struct {
-	}{})
+		arg1 context.Context
+	}{arg1})
 	stub := fake.ListStub
 	fakeReturns := fake.listReturns
-	fake.recordInvocation("List", []interface{}{})
+	fake.recordInvocation("List", []interface{}{arg1})
 	fake.listMutex.Unlock()
 	if stub != nil {
-		return stub()
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -333,10 +342,17 @@ func (fake *FakeStorer) ListCallCount() int {
 	return len(fake.listArgsForCall)
 }
 
-func (fake *FakeStorer) ListCalls(stub func() ([]*models.Plugin, error)) {
+func (fake *FakeStorer) ListCalls(stub func(context.Context) ([]*models.Plugin, error)) {
 	fake.listMutex.Lock()
 	defer fake.listMutex.Unlock()
 	fake.ListStub = stub
+}
+
+func (fake *FakeStorer) ListArgsForCall(i int) context.Context {
+	fake.listMutex.RLock()
+	defer fake.listMutex.RUnlock()
+	argsForCall := fake.listArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeStorer) ListReturns(result1 []*models.Plugin, result2 error) {
