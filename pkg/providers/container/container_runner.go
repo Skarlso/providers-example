@@ -28,6 +28,7 @@ type Config struct {
 type Dependencies struct {
 	Next   providers.Runner
 	Storer providers.Storer
+	Logger zerolog.Logger
 }
 
 // Runner implements the Run interface for container based runtimes.
@@ -35,19 +36,17 @@ type Runner struct {
 	Config
 	Dependencies
 
-	Logger zerolog.Logger
-	cli    client.APIClient
+	cli client.APIClient
 }
 
 // NewRunner creates a new container based runtime.
-func NewRunner(logger zerolog.Logger, cfg Config, deps Dependencies) (*Runner, error) {
+func NewRunner(cfg Config, deps Dependencies) (*Runner, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		logger.Debug().Err(err).Msg("Failed to create docker client.")
+		deps.Logger.Debug().Err(err).Msg("Failed to create docker client.")
 		return nil, err
 	}
 	return &Runner{
-		Logger:       logger,
 		Config:       cfg,
 		Dependencies: deps,
 		cli:          cli,

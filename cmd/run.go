@@ -48,11 +48,12 @@ func runRunCmd(cmd *cobra.Command, args []string) {
 		Logger: log,
 		Storer: store,
 	})
-	containerPlugin, err := container.NewRunner(log, container.Config{
+	containerPlugin, err := container.NewRunner(container.Config{
 		DefaultMaximumCommandRuntime: 15,
 	}, container.Dependencies{
 		Storer: store,
 		Next:   barePlugin,
+		Logger: log,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create container runner")

@@ -74,9 +74,9 @@ func TestCreateRun(t *testing.T) {
 		containerOkChan: containerOkWaitChannel,
 	}
 	r := Runner{
-		Logger: logger,
 		Dependencies: Dependencies{
 			Storer: fakeStorer,
+			Logger: logger,
 		},
 		Config: Config{
 			DefaultMaximumCommandRuntime: 15,

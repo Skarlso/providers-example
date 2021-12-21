@@ -58,10 +58,11 @@ type FakeStorer struct {
 	initReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ListStub        func(context.Context) ([]*models.Plugin, error)
+	ListStub        func(context.Context, providers.ListOpts) ([]*models.Plugin, error)
 	listMutex       sync.RWMutex
 	listArgsForCall []struct {
 		arg1 context.Context
+		arg2 providers.ListOpts
 	}
 	listReturns struct {
 		result1 []*models.Plugin
@@ -317,18 +318,19 @@ func (fake *FakeStorer) InitReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorer) List(arg1 context.Context) ([]*models.Plugin, error) {
+func (fake *FakeStorer) List(arg1 context.Context, arg2 providers.ListOpts) ([]*models.Plugin, error) {
 	fake.listMutex.Lock()
 	ret, specificReturn := fake.listReturnsOnCall[len(fake.listArgsForCall)]
 	fake.listArgsForCall = append(fake.listArgsForCall, struct {
 		arg1 context.Context
-	}{arg1})
+		arg2 providers.ListOpts
+	}{arg1, arg2})
 	stub := fake.ListStub
 	fakeReturns := fake.listReturns
-	fake.recordInvocation("List", []interface{}{arg1})
+	fake.recordInvocation("List", []interface{}{arg1, arg2})
 	fake.listMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -342,17 +344,17 @@ func (fake *FakeStorer) ListCallCount() int {
 	return len(fake.listArgsForCall)
 }
 
-func (fake *FakeStorer) ListCalls(stub func(context.Context) ([]*models.Plugin, error)) {
+func (fake *FakeStorer) ListCalls(stub func(context.Context, providers.ListOpts) ([]*models.Plugin, error)) {
 	fake.listMutex.Lock()
 	defer fake.listMutex.Unlock()
 	fake.ListStub = stub
 }
 
-func (fake *FakeStorer) ListArgsForCall(i int) context.Context {
+func (fake *FakeStorer) ListArgsForCall(i int) (context.Context, providers.ListOpts) {
 	fake.listMutex.RLock()
 	defer fake.listMutex.RUnlock()
 	argsForCall := fake.listArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeStorer) ListReturns(result1 []*models.Plugin, result2 error) {
