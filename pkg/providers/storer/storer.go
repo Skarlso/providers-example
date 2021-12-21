@@ -186,19 +186,19 @@ func (l *LiteStorer) createConnection() (*sql.DB, error) {
 
 // Init creates and bootstraps the database.
 func (l *LiteStorer) Init() error {
-	l.Logger.Debug().Str("location", l.DBLocation).Msg("Creating new database...®")
 	if _, err := os.Stat(filepath.Join(l.DBLocation, "provider.db")); err == nil {
 		return nil
 	} else if !os.IsNotExist(err) {
 		return fmt.Errorf("failed to stat db file: %w", err)
 	}
+	l.Logger.Debug().Str("location", l.DBLocation).Msg("Creating new database...®")
 	db, err := sql.Open("sqlite3", filepath.Join(l.DBLocation, "provider.db"))
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
 
-	sqlStmt := `create table plugins (id integer primary key, name text, type text, location text, image text);`
+	sqlStmt := `create table plugins (id integer primary key, name text unique, type text, location text, image text);`
 	if _, err := db.Exec(sqlStmt); err != nil {
 		return fmt.Errorf("failed to execute bootstrap statement: %w", err)
 	}

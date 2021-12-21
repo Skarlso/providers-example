@@ -7,15 +7,15 @@ BUILDDIR := bin
 VERSION ?= 0.0.1
 
 # List the GOOS and GOARCH to build
-GO_LDFLAGS_STATIC="-s -w $(CTIMEVAR) -extldflags -static"
+GO_LDFLAGS_STATIC="-s"
 
 .DEFAULT_GOAL := help
 
 ##@ Build
 
 binaries: ## Builds binaries for all supported platforms, linux, darwin
-	CGO_ENABLED=0 gox \
-		-osarch="linux/amd64 linux/arm darwin/amd64" \
+	CGO_ENABLED=1 gox \
+		-osarch="darwin/amd64" \
 		-ldflags=${GO_LDFLAGS_STATIC} \
 		-output="$(BUILDDIR)/{{.OS}}/{{.Arch}}/$(NAME)" \
 		-tags="netgo" \
