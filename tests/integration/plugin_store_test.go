@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Skarlso/providers-example/pkg/models"
+	"github.com/Skarlso/providers-example/pkg/providers"
 	"github.com/Skarlso/providers-example/pkg/providers/storer"
 )
 
@@ -51,11 +52,16 @@ func TestPluginStore_MainFlow(t *testing.T) {
 	assert.Equal(t, models.Container, p2.Type)
 
 	// list
-	plugins, err := l.List(ctx)
+	plugins, err := l.List(ctx, providers.ListOpts{})
 	assert.NoError(t, err)
 	assert.Len(t, plugins, 2)
 	assert.Equal(t, "test-bare-1", plugins[0].Name)
 	assert.Equal(t, "test-container-1", plugins[1].Name)
+	// can filter
+	plugins, err = l.List(ctx, providers.ListOpts{TypeFilter: models.Container})
+	assert.NoError(t, err)
+	assert.Len(t, plugins, 1)
+	assert.Equal(t, "test-container-1", plugins[0].Name)
 
 	// delete
 	err = l.Delete(ctx, "test-bare-1")

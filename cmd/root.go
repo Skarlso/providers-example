@@ -12,7 +12,6 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "executor",
 		Short: "The main entry point to the plugin running system.",
-		Run:   runRootCmd,
 	}
 	rootArgs struct {
 		location string
@@ -34,9 +33,6 @@ func init() {
 		}
 		rootArgs.location = homeFolder
 	}
-}
-
-func runRootCmd(cmd *cobra.Command, args []string) {
 }
 
 // Execute runs the root command.

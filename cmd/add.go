@@ -35,6 +35,9 @@ func init() {
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) {
+	if addArgs.location == "" {
+		addArgs.location = rootArgs.location
+	}
 	out := zerolog.ConsoleWriter{
 		Out: os.Stderr,
 	}

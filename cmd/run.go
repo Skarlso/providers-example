@@ -46,7 +46,7 @@ func runRunCmd(cmd *cobra.Command, args []string) {
 	}
 	barePlugin := bare.NewBareRunner(bare.Config{}, bare.Dependencies{
 		Logger: log,
-		Store:  store,
+		Storer: store,
 	})
 	containerPlugin, err := container.NewRunner(log, container.Config{
 		DefaultMaximumCommandRuntime: 15,

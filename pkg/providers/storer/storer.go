@@ -129,7 +129,7 @@ func (l *LiteStorer) Delete(ctx context.Context, name string) error {
 }
 
 // List all available plugins.
-func (l *LiteStorer) List(ctx context.Context) ([]*models.Plugin, error) {
+func (l *LiteStorer) List(ctx context.Context, opts providers.ListOpts) ([]*models.Plugin, error) {
 	db, err := l.createConnection()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open connection: %w", err)
@@ -139,8 +139,14 @@ func (l *LiteStorer) List(ctx context.Context) ([]*models.Plugin, error) {
 			l.Logger.Error().Err(err).Msg("failed to close db connection")
 		}
 	}()
+	query := "select id, name, type, location, image from plugins"
+	where := make([]interface{}, 0)
+	if opts.TypeFilter != "" {
+		query += " where type=$1"
+		where = append(where, opts.TypeFilter)
+	}
 	// we could use a transaction here and all the jazz, but this is a blog post project. :)
-	row, err := db.Query("select id, name, type, location, image from plugins")
+	row, err := db.Query(query, where...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run query: %w", err)
 	}

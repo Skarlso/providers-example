@@ -36,9 +36,7 @@ type Runner struct {
 	Dependencies
 
 	Logger zerolog.Logger
-	Next   providers.Runner
-
-	cli client.APIClient
+	cli    client.APIClient
 }
 
 // NewRunner creates a new container based runtime.
@@ -165,7 +163,8 @@ func (cr *Runner) startAndWaitForContainer(commandName, containerID string) {
 				cr.Logger.Debug().Str("logs", logs).Msg("Logs from the attached container.")
 				return
 			}
-			cr.Logger.Info().Msg("Successfully finished command.")
+			cr.Logger.Info().Msg("Successfully finished command. Output: ")
+			fmt.Println(buffer.String())
 			return
 		case <-time.After(time.Duration(cr.DefaultMaximumCommandRuntime) * time.Second):
 			// update entry

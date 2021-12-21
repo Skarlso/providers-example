@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/rs/zerolog v1.26.0
 	github.com/spf13/cobra v1.2.1
@@ -21,6 +22,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/mattn/go-runewidth v0.0.2 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
